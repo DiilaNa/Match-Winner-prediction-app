@@ -1,0 +1,13 @@
+{
+  "name": "match-winner-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0 --port 4321"
+  },
+  "dependencies": {
+    "astro": "^5.13.0"
+  }
+}

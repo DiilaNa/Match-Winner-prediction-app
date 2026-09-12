@@ -1,0 +1,236 @@
+---
+const teamOptions = [
+  'India',
+  'Australia',
+  'England',
+  'New Zealand',
+  'Pakistan',
+  'South Africa',
+  'Sri Lanka',
+  'Bangladesh',
+  'Afghanistan',
+  'West Indies',
+  'Netherlands',
+  'Ireland',
+  'Zimbabwe',
+  'Nepal',
+  'USA',
+  'Canada',
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Match Winner Predictor</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --panel-2: #1f2937;
+        --accent: #38bdf8;
+        --success: #22c55e;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --danger: #f87171;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(135deg, #020617, #0f172a 45%, #111827);
+        color: var(--text);
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+      .card {
+        background: rgba(17, 24, 39, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      }
+      h1 {
+        margin: 0 0 14px;
+        font-size: clamp(2rem, 4vw, 3rem);
+      }
+      .subtitle {
+        color: var(--muted);
+        margin-bottom: 24px;
+      }
+      form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      label {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      input, select, button {
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text);
+        padding: 12px 14px;
+        font-size: 1rem;
+      }
+      button {
+        cursor: pointer;
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        border: none;
+        font-weight: 700;
+      }
+      .result {
+        margin-top: 24px;
+        padding: 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.1);
+        display: none;
+      }
+      .result.show { display: block; }
+      .result strong {
+        font-size: 1.4rem;
+        color: white;
+      }
+      .probability {
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .pill {
+        background: rgba(148, 163, 184, 0.12);
+        border-radius: 999px;
+        padding: 8px 12px;
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Match Winner Predictor</h1>
+        <p class="subtitle">Predict the likely winner of a T20 match using team form, toss impact, venue and match timing.</p>
+
+        <form id="predictionForm">
+          <div class="field">
+            <label for="team1">Team 1</label>
+            <select id="team1" name="team1" required>
+              {teamOptions.map((team) => <option value={team}>{team}</option>)}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="team2">Team 2</label>
+            <select id="team2" name="team2" required>
+              {teamOptions.map((team) => <option value={team}>{team}</option>)}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="venue">Venue</label>
+            <input id="venue" name="venue" value="R Premadasa Stadium" required />
+          </div>
+
+          <div class="field">
+            <label for="toss_winner">Toss Winner</label>
+            <select id="toss_winner" name="toss_winner" required>
+              {teamOptions.map((team) => <option value={team}>{team}</option>)}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="toss_decision">Toss Decision</label>
+            <select id="toss_decision" name="toss_decision" required>
+              <option value="bat">Bat</option>
+              <option value="field">Field</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="match_date">Match Date</label>
+            <input id="match_date" name="match_date" type="date" value="2026-09-12" required />
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <button type="submit">Predict Winner</button>
+          </div>
+        </form>
+
+        <div id="result" class="result">
+          <strong id="winnerText">Predicted Winner</strong>
+          <div class="probability">
+            <div class="pill" id="team1Prob">Team 1: 0%</div>
+            <div class="pill" id="team2Prob">Team 2: 0%</div>
+          </div>
+          <p id="messageText"></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('predictionForm');
+      const result = document.getElementById('result');
+      const winnerText = document.getElementById('winnerText');
+      const team1Prob = document.getElementById('team1Prob');
+      const team2Prob = document.getElementById('team2Prob');
+      const messageText = document.getElementById('messageText');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const team1 = document.getElementById('team1').value;
+        const team2 = document.getElementById('team2').value;
+        const venue = document.getElementById('venue').value;
+        const toss_winner = document.getElementById('toss_winner').value;
+        const toss_decision = document.getElementById('toss_decision').value;
+        const match_date = document.getElementById('match_date').value;
+
+        const payload = {
+          team1,
+          team2,
+          venue,
+          toss_winner,
+          toss_decision,
+          match_date,
+        };
+
+        try {
+          const response = await fetch('http://localhost:8080/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            throw new Error('Prediction request failed');
+          }
+
+          const data = await response.json();
+          winnerText.textContent = data.winner;
+          team1Prob.textContent = `${team1}: ${(data.team1_probability * 100).toFixed(1)}%`;
+          team2Prob.textContent = `${team2}: ${(data.team2_probability * 100).toFixed(1)}%`;
+          messageText.textContent = data.message;
+          result.classList.add('show');
+        } catch (error) {
+          winnerText.textContent = 'Prediction error';
+          team1Prob.textContent = 'Team 1: 0%';
+          team2Prob.textContent = 'Team 2: 0%';
+          messageText.textContent = 'Could not connect to the prediction backend. Make sure the Go API is running.';
+          result.classList.add('show');
+        }
+      });
+    </script>
+  </body>
+</html>
