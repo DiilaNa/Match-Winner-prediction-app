@@ -1,0 +1,13 @@
+ml_pipeline/data/
+*.csv
+*.zip
+
+# Virtual Environments & Caches
+__pycache__/
+venv/
+.env
+node_modules/
+
+.idea
+.vscode
+.env
